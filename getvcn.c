@@ -13,7 +13,37 @@ int main(int argc, char** argv)
 
   struct variable_list *vars; /* variables in the response */
   int status;
-  int member=atoi(argv[3]);
+  int member=-1;
+  char* agentaddress=NULL;
+  char* community=NULL;
+
+  {
+    int i = 1;
+    for ( i = 1 ; i<argc ; i+=2)
+      {
+	if (argv[i][0] != '-')
+	  {
+	    printf("UNKNOWN - unknown parameter %s",argv[i]);
+	    exit(3);
+	    }
+	switch (argv[i][1])
+	  {
+	  case 'H':
+	    agentaddress = argv[i+1];
+	    break;
+	  case 'C':
+	    community = argv[i+1];
+	    break;
+	  case 'n':
+	    member = atoi(argv[i+1]);
+	    break;
+	  }
+      }
+    if ( !agentaddress || !community || (member==-1) )
+      {
+	printf("UNKNOWN - wrong parameters");
+      }
+  }   
 
   
   /*
@@ -25,13 +55,13 @@ int main(int argc, char** argv)
    * Initialize a "session" that defines who we're going to talk to
    */
   snmp_sess_init( &session );                   /* set up defaults */
-  session.peername = argv[1];
+  session.peername = agentaddress;
 
   /* set the SNMP version number */
   session.version = SNMP_VERSION_1;
 
   /* set the SNMPv1 community name used for authentication */
-  session.community = argv[2];
+  session.community = community;
   session.community_len = strlen(session.community);
 
 
@@ -108,8 +138,8 @@ int main(int argc, char** argv)
 	    }
 	  else
 	    {
-	      fprintf(stderr, "UNKNOWN - error in packet. Reason: %s\n",
-		snmp_errstring(response->errstat));
+	      printf("UNKNOWN - error in packet. Reason: %s\n",	snmp_errstring(response->errstat));
+	      exit(3);
 	    }
 	}
       else
