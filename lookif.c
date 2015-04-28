@@ -270,5 +270,5 @@ int main(int argc, char** argv)
       snmp_free_pdu(response);
     }
   snmp_close(ss);
-  
+  return 0;
 }
