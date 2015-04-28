@@ -42,6 +42,7 @@ int main(int argc, char** argv)
     if ( !agentaddress || !community || (member==-1) )
       {
 	printf("UNKNOWN - wrong parameters");
+	exit(3);
       }
   }   
 
