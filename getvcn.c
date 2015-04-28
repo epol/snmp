@@ -101,7 +101,7 @@ int main(int argc, char** argv)
     /*
      * SUCCESS: Print the result variables
      */
-    if (vars)
+    if (response)
       {
 	vars = response->variables;
 	printf("OK - ");
