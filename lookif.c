@@ -153,9 +153,8 @@ int main(int argc, char** argv)
   ss = snmp_open(&session);                     /* establish the session */
 
   if (!ss) {
-    snmp_perror("ack");
-    snmp_log(LOG_ERR, "Unable to connect to %s!!!\n",session.peername);
-    exit(2);
+    printf("UNKNOWN - unable to connect to %s\n",session.peername);
+    exit(3);
   }
 
   /* 
@@ -204,7 +203,8 @@ int main(int argc, char** argv)
 	}
       else
 	{
-	  printf("Error in getting variables\n");
+	  printf("UNKNOWN - Error in getting variables\n");
+	  exit(3);
 	}
     } else {
       /*
@@ -212,10 +212,17 @@ int main(int argc, char** argv)
        */
       
       if (status == STAT_SUCCESS)
-	fprintf(stderr, "Error in packet\nReason: %s\n",
+	{
+	  printf("UNKNOWN - Error in packet. Reason: %s\n",
 		snmp_errstring(response->errstat));
+	  exit(3);
+	}
       else
-	snmp_sess_perror("snmpget", ss);
+	{
+	  printf("UNKNOWN - ");
+	  snmp_sess_perror("snmpget", ss);
+	  exit(3);
+	}
     }
   }
   //  printf("Index found: %d\n",ifIndex);
