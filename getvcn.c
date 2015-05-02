@@ -103,6 +103,12 @@ int main(int argc, char** argv)
       break;
     case 3:
       exit_code = 3;
+      break;
+    default:
+      /* This shouldn't happen, is a bug! */
+      printf("UNKNOWN - error in parsing the status of elib_get_one_response\n");
+      exit_code=3;
+      break;
     }
   if (response)
     {
