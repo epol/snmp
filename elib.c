@@ -28,7 +28,7 @@ int elib_init(
   session.peername = agentaddress;
 
   /* set the SNMP version number */
-  session.version = SNMP_VERSION_2c;
+  session.version = SNMP_VERSION_1;
 
   /* set the SNMPv1 community name used for authentication */
   session.community = community;
@@ -53,16 +53,15 @@ int elib_init(
 
 int elib_get_one_response(
 			   struct snmp_session *ss, /*ss: session to be used */
-			   struct variable_list *var, /* The variable we are going to return */
+			   struct snmp_pdu **responsep,
 			   oid anOID[],  /* OID to be asked */
 			   size_t anOID_len,
 			   int msg_type
 			  )
 {
   struct snmp_pdu *pdu; /* information to send to the host */
-  struct snmp_pdu *response; /* information from the host */
   int status;
-  int exit_code = 0;
+  int exit_code = -1;
   /*
    * Create the PDU for the data for our request.
    */
@@ -72,22 +71,21 @@ int elib_get_one_response(
   /*
    * Send the Request out.
    */
-  status = snmp_synch_response(ss, pdu, &response);
+  status = snmp_synch_response(ss, pdu, responsep);
   
   
   /*
    * Process the response.
    */
-  if (status == STAT_SUCCESS && response->errstat == SNMP_ERR_NOERROR)
+  if (status == STAT_SUCCESS && (*responsep)->errstat == SNMP_ERR_NOERROR)
     {
       /*
        * SUCCESS: Print the result variables
        */
-      if (response)
+      if (*responsep)
 	{
-	  if (response->variables )
+	  if ((*responsep)->variables )
 	    {
-	      memcpy(response->variables , var, sizeof(struct variable_list));
 	      exit_code = 0;
 	    }
 	  else
@@ -95,7 +93,6 @@ int elib_get_one_response(
 	      printf("UNKNOWN - error in getting variables\n");
 	      exit_code = 3;
 	    }
-	  snmp_free_pdu(response);      
 	}
       else
 	{
@@ -111,14 +108,14 @@ int elib_get_one_response(
       
       if (status == STAT_SUCCESS)
 	{
-	  if (response->errstat == SNMP_ERR_NOSUCHNAME)
+	  if ((*responsep)->errstat == SNMP_ERR_NOSUCHNAME)
 	    {
 	      /* printf("CRITICAL - variable not found\n"); */
 	      exit_code = 2;
 	    }
 	  else
 	    {
-	      printf("UNKNOWN - error in packet. Reason: %s\n",	snmp_errstring(response->errstat));
+	      printf("UNKNOWN - error in packet. Reason: %s\n",	snmp_errstring((*responsep)->errstat));
 	      exit_code = 3;
 	    }
 	}
@@ -128,6 +125,17 @@ int elib_get_one_response(
 	  exit_code = 3;
 	}
     }
+  /*  if (pdu)
+    {
+      snmp_free_pdu(pdu);   
+      } */
   return exit_code;
 }
 
+int elib_close(
+	       struct snmp_session** ssp
+	       )
+{
+  snmp_close(*ssp);
+  return 0;
+}
