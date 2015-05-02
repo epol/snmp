@@ -91,7 +91,7 @@ int main(int argc, char** argv)
 	  printf("OK - linecard\n");
 	  break;
 	default:
-	  //	  printf("UNKNOWN - unknow jnxVirtualChassisMemberRole integer %ld for member %d\n", *var.val.integer, member);
+	  printf("UNKNOWN - unknow jnxVirtualChassisMemberRole integer %ld for member %d\n", *(response->variables->val.integer), member);
 	  exit_code = 3;
 	  break;
 	}
