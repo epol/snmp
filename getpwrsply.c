@@ -97,7 +97,8 @@ int main(int argc, char** argv)
   read_objid("1.3.6.1.4.1.2636.3.1.13.1.6.2", anOID, &anOID_len);
   /* jnxVirtualChassisMemberRole.member */
   anOID[anOID_len++] = member+1;
-  anOID[anOID_len++] = index;
+  anOID[anOID_len++] = index+1;
+  anOID[anOID_len++] = 0;
 
   status = elib_get_one_response(ss,&response, anOID, anOID_len, SNMP_MSG_GET  );
 
@@ -121,27 +122,31 @@ int main(int argc, char** argv)
 	  exit_code = 0;
 	  break;
 	case 4:
-	  printf("UNKNOWN - peer connection %s is opensent\n",peer_ip);
-	  exit_code = 2;
+	  printf("UNKNOWN - power supply %d of member %d status is reset\n",index,member);
+	  exit_code = 3;
 	  break;
 	case 5:
-	  printf("CRITICAL - peer connection %s is openconfirm\n",peer_ip);
-	  exit_code = 2;
+	  printf("OK - power supply %d of member %d status is running at full speed\n",index,member);
+	  exit_code = 0;
 	  break;
 	case 6:
-	  printf("OK - peer connection %s is established\n",peer_ip);
+	  printf("CRITICAL - power supply %d of member %d status is down\n",index,member);
+	  exit_code = 2;
+	  break;
+	case 7:
+	  printf("OK - power supply %d of member %d status is standby\n",index,member);
 	  exit_code = 0;
 	  break;
 	default:
-	  printf("UNKNOWN - unknow bgpPeerState integer %ld for peer %s\n", *(response->variables->val.integer), peer_ip);
+	  printf("UNKNOWN - unknow jnxOperatingState integer %ld for power supply %d of member %d\n", *(response->variables->val.integer), index, member);
 	  exit_code = 3;
 	  break;
 	}
       break;
     case 2:
-      /* Variable not found, so the peer isn't in the table */
-      printf("UNKNOWN - peer %s not found in table\n",peer_ip);
-      exit_code = 3;
+      /* Variable not found, so the supply isn't in the table */
+      printf("CRITICAL - supply %d of member %d not found in table\n",index,member);
+      exit_code = 2;
       break;
     case 3:
       exit_code = 3;
