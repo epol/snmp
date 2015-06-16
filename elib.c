@@ -50,7 +50,7 @@ int elib_init(
   session.peername = agentaddress;
 
   /* set the SNMP version number */
-  session.version = SNMP_VERSION_1;
+  session.version = SNMP_VERSION_2c;
 
   /* set the SNMPv1 community name used for authentication */
   session.community = community;
