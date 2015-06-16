@@ -92,7 +92,7 @@ int main(int argc, char** argv)
     case 0:
       /* OK with the query */
       /* TODO: check that it really is a string */
-      if ((strcmp(response->variables->val.string,"active")==0) || (strcmp(response->variables->val.string,"passive")==0))
+      if ((strncmp(response->variables->val.string,"active",6)==0) || (strncmp(response->variables->val.string,"passive",7)==0))
 	{
 	  printf("OK - HA state is %s\n",response->variables->val.string);
 	  exit_code = 0;
