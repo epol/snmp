@@ -94,12 +94,16 @@ int main(int argc, char** argv)
       /* TODO: check that it really is a string */
       if ((strncmp(response->variables->val.string,"active",6)==0) || (strncmp(response->variables->val.string,"passive",7)==0))
 	{
-	  printf("OK - HA state is %s\n",response->variables->val.string);
+	  char format[100];
+	  sprintf(format,"OK - HA state is %s%ds\n","%.",response->variables->val_len);
+	  printf(format,response->variables->val.string);
 	  exit_code = 0;
 	}
       else
 	{
-	  printf("CRITICAL - HA state is %s\n",response->variables->val.string);
+	  char format[100];
+	  sprintf(format,"CRITICAL - HA state is %s%ds\n","%.",response->variables->val_len);
+	  printf(format,response->variables->val.string);
 	  exit_code =1;
 	  break;
 	}
