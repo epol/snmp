@@ -124,17 +124,17 @@ int main(int argc, char** argv)
 	  }
 	if ((load >=0) && (load < warning))
 	  {
-	    printf("OK - session load is %d\%\n",load);
+	    printf("OK - session load is %d\%|session_load=%d;%d;%d;%d\n",load,load,warning,critical,0);
 	    exit_code = 0;
 	  }
 	if ((load >= warning) && (load < critical))
 	  {
-	  printf("WARNING - session load is %d\%\n",load);
+	    printf("WARNING - session load is %d\%|session_load=%d;%d;%d;%d\n",load,load,warning,critical,0);
 	  exit_code = 1;
 	  }
 	if ((load >= critical) && (load <=100))
 	  {
-	    printf("CRITICAL - session load is %d\%\n",load);
+	    printf("CRITICAL - session load is %d\%|session_load=%d;%d;%d;%d\n",load,load,warning,critical,0);
 	    exit_code = 2;
 	  }
 	if (load > 100)
