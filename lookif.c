@@ -27,6 +27,7 @@
 #include <net-snmp/net-snmp-config.h>
 #include <net-snmp/net-snmp-includes.h>
 
+#include "elib.h"
 
 
 int main(int argc, char** argv)
@@ -48,6 +49,8 @@ int main(int argc, char** argv)
   int ifIndex=1;
   long int ifStatus = 0;
   long int ifSpeed = 0;
+  unsigned long int ifInOctets = 0;
+  unsigned long int ifOutOctets = 0;
   
   {
     int i = 1;
@@ -194,6 +197,52 @@ int main(int argc, char** argv)
 	      exit_code=3;
 	      break;
 	    }
+
+	  get_node("IF-MIB::ifInOctets",anOID, &anOID_len);
+	  anOID[anOID_len++] = ifIndex;
+	  
+	  status = elib_get_one_response(ss,&response, anOID, anOID_len, SNMP_MSG_GET  );
+	  
+	  switch(status)
+	    {
+	    case 0:
+	      /* OK with the query */
+	      ifInOctets = *(response->variables->val.integer);
+	      exit_code=0;
+	      break;	
+	    case 2:
+	    case 3:
+	      printf("UNKNOWN - error while checking link input octets\n");
+	      exit_code=3;
+	      break;
+	    default:
+	      printf("UNKNOWN - error in parsing status of elib_get_one_response\n");
+	      exit_code=3;
+	      break;
+	    }
+
+	  get_node("IF-MIB::ifOutOctets",anOID, &anOID_len);
+	  anOID[anOID_len++] = ifIndex;
+	  
+	  status = elib_get_one_response(ss,&response, anOID, anOID_len, SNMP_MSG_GET  );
+	  
+	  switch(status)
+	    {
+	    case 0:
+	      /* OK with the query */
+	      ifOutOctets = *(response->variables->val.integer);
+	      exit_code=0;
+	      break;	
+	    case 2:
+	    case 3:
+	      printf("UNKNOWN - error while checking link output octets\n");
+	      exit_code=3;
+	      break;
+	    default:
+	      printf("UNKNOWN - error in parsing status of elib_get_one_response\n");
+	      exit_code=3;
+	      break;
+	    }
 	}
       
       if ( exit_code==0 )
@@ -207,19 +256,19 @@ int main(int argc, char** argv)
 	    {
 	      if ( ifSpeed < crit)
 		{
-		  printf("CRITICAL - link %s is up at %ld Mbit/s\n",ifName,ifSpeed);
+		  printf("CRITICAL - link %s is up at %ld Mbit/s| inOctets=%lu outOctets=%lu\n",ifName,ifSpeed,ifInOctets,ifOutOctets);
 		  exit_code=2;
 		}
 	      else
 		{
 		  if ( ifSpeed < warn)
 		    {
-		      printf("WARNING - link %s is up at %ld Mbit/s\n",ifName,ifSpeed);
+		      printf("WARNING - link %s is up at %ld Mbit/s| inOctets=%lu outOctets=%lu\n",ifName,ifSpeed,ifInOctets,ifOutOctets);
 		      exit_code=1;
 		    }
 		  else
 		    {
-		      printf ("OK - link %s is up at %ld Mbit/s\n",ifName,ifSpeed);
+		      printf ("OK - link %s is up at %ld Mbit/s|  inOctets=%lu outOctets=%lu\n",ifName,ifSpeed,ifInOctets,ifOutOctets);
 		      exit_code=0;
 		    }
 		}
@@ -231,6 +280,6 @@ int main(int argc, char** argv)
     {
       snmp_free_pdu(response);
     }
-  elib_close(ss);
+  elib_close(&ss);
   return exit_code;
 }
