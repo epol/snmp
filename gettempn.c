@@ -121,17 +121,17 @@ int main(int argc, char** argv)
 	}
       if (temperature > critical)
 	{
-	  printf("CRITICAL - member %d is at %d degree |temperature=%d;%d;%d;%d\n",member,temperature,temperature,warning,critical,0);
+	  printf("CRITICAL - member %d is at %d degree |temperature=%dC;%d;%d;%d\n",member,temperature,temperature,warning,critical,0);
 	  exit_code = 2;
 	  break;
 	}
       if (temperature > warning)
 	{
-	  printf("WARNING - member %d is at %d degree |temperature=%d;%d;%d;%d\n",member,temperature,temperature,warning,critical,0);
+	  printf("WARNING - member %d is at %d degree |temperature=%dC;%d;%d;%d\n",member,temperature,temperature,warning,critical,0);
 	  exit_code = 1;
 	  break;
 	}
-      printf("OK - member %d is at %d degree |temperature=%d;%d;%d;%d\n",member,temperature,temperature,warning,critical,0);
+      printf("OK - member %d is at %d degree |temperature=%dC;%d;%d;%d\n",member,temperature,temperature,warning,critical,0);
       exit_code = 0;
       break;
     case 2:
