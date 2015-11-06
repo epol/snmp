@@ -51,6 +51,12 @@ int main(int argc, char** argv)
   long int ifSpeed = 0;
   unsigned long int ifInOctets = 0;
   unsigned long int ifOutOctets = 0;
+  unsigned long int ifInUcastPkts = 0;
+  unsigned long int ifOutUcastPkts = 0;
+  unsigned long int ifInMulticastPkts = 0;
+  unsigned long int ifOutMulticastPkts = 0;
+  unsigned long int ifInBroadcastPkts = 0;
+  unsigned long int ifOutBroadcastPkts = 0;
   
   {
     int i = 1;
@@ -243,6 +249,144 @@ int main(int argc, char** argv)
 	      exit_code=3;
 	      break;
 	    }
+
+	  get_node("IF-MIB::ifInUcastPkts",anOID, &anOID_len);
+	  anOID[anOID_len++] = ifIndex;
+	  
+	  status = elib_get_one_response(ss,&response, anOID, anOID_len, SNMP_MSG_GET  );
+	  
+	  switch(status)
+	    {
+	    case 0:
+	      /* OK with the query */
+	      ifInUcastPkts = *(response->variables->val.integer);
+	      exit_code=0;
+	      break;	
+	    case 2:
+	    case 3:
+	      printf("UNKNOWN - error while checking link input unicast packets\n");
+	      exit_code=3;
+	      break;
+	    default:
+	      printf("UNKNOWN - error in parsing status of elib_get_one_response\n");
+	      exit_code=3;
+	      break;
+	    }
+
+	  get_node("IF-MIB::ifOutUcastPkts",anOID, &anOID_len);
+	  anOID[anOID_len++] = ifIndex;
+	  
+	  status = elib_get_one_response(ss,&response, anOID, anOID_len, SNMP_MSG_GET  );
+	  
+	  switch(status)
+	    {
+	    case 0:
+	      /* OK with the query */
+	      ifOutUcastPkts = *(response->variables->val.integer);
+	      exit_code=0;
+	      break;	
+	    case 2:
+	    case 3:
+	      printf("UNKNOWN - error while checking link output unicast packtes\n");
+	      exit_code=3;
+	      break;
+	    default:
+	      printf("UNKNOWN - error in parsing status of elib_get_one_response\n");
+	      exit_code=3;
+	      break;
+	    }
+
+	  get_node("IF-MIB::ifInMulticastPkts",anOID, &anOID_len);
+	  anOID[anOID_len++] = ifIndex;
+	  
+	  status = elib_get_one_response(ss,&response, anOID, anOID_len, SNMP_MSG_GET  );
+	  
+	  switch(status)
+	    {
+	    case 0:
+	      /* OK with the query */
+	      ifInMulticastPkts = *(response->variables->val.integer);
+	      exit_code=0;
+	      break;	
+	    case 2:
+	    case 3:
+	      printf("UNKNOWN - error while checking link input multicast packets\n");
+	      exit_code=3;
+	      break;
+	    default:
+	      printf("UNKNOWN - error in parsing status of elib_get_one_response\n");
+	      exit_code=3;
+	      break;
+	    }
+
+	  get_node("IF-MIB::ifOutMulticastPkts",anOID, &anOID_len);
+	  anOID[anOID_len++] = ifIndex;
+	  
+	  status = elib_get_one_response(ss,&response, anOID, anOID_len, SNMP_MSG_GET  );
+	  
+	  switch(status)
+	    {
+	    case 0:
+	      /* OK with the query */
+	      ifOutMulticastPkts = *(response->variables->val.integer);
+	      exit_code=0;
+	      break;	
+	    case 2:
+	    case 3:
+	      printf("UNKNOWN - error while checking link output multicast packtes\n");
+	      exit_code=3;
+	      break;
+	    default:
+	      printf("UNKNOWN - error in parsing status of elib_get_one_response\n");
+	      exit_code=3;
+	      break;
+	    }
+	  
+	  get_node("IF-MIB::ifInBroadcastPkts",anOID, &anOID_len);
+	  anOID[anOID_len++] = ifIndex;
+	  
+	  status = elib_get_one_response(ss,&response, anOID, anOID_len, SNMP_MSG_GET  );
+	  
+	  switch(status)
+	    {
+	    case 0:
+	      /* OK with the query */
+	      ifInBroadcastPkts = *(response->variables->val.integer);
+	      exit_code=0;
+	      break;	
+	    case 2:
+	    case 3:
+	      printf("UNKNOWN - error while checking link input broadcast packets\n");
+	      exit_code=3;
+	      break;
+	    default:
+	      printf("UNKNOWN - error in parsing status of elib_get_one_response\n");
+	      exit_code=3;
+	      break;
+	    }
+
+	  get_node("IF-MIB::ifOutBroadcastPkts",anOID, &anOID_len);
+	  anOID[anOID_len++] = ifIndex;
+	  
+	  status = elib_get_one_response(ss,&response, anOID, anOID_len, SNMP_MSG_GET  );
+	  
+	  switch(status)
+	    {
+	    case 0:
+	      /* OK with the query */
+	      ifOutBroadcastPkts = *(response->variables->val.integer);
+	      exit_code=0;
+	      break;	
+	    case 2:
+	    case 3:
+	      printf("UNKNOWN - error while checking link output broadcast packtes\n");
+	      exit_code=3;
+	      break;
+	    default:
+	      printf("UNKNOWN - error in parsing status of elib_get_one_response\n");
+	      exit_code=3;
+	      break;
+	    }
 	}
       
       if ( exit_code==0 )
@@ -256,19 +400,19 @@ int main(int argc, char** argv)
 	    {
 	      if ( ifSpeed < crit)
 		{
-		  printf("CRITICAL - link %s is up at %ld Mbit/s| inOctets=%lu outOctets=%lu\n",ifName,ifSpeed,ifInOctets,ifOutOctets);
+		  printf ("CRITICAL - link %s is up at %ld Mbit/s| inOctets=%lu outOctets=%lu inUcastPkts=%lu outUcastPkts=%lu inMulticastPkts=%lu outMulticastPkts=%lu inBroadcastPkts=%lu outBroadcastPkts=%lu\n",ifName,ifSpeed,ifInOctets,ifOutOctets,ifInUcastPkts,ifOutUcastPkts,ifInMulticastPkts,ifOutMulticastPkts,ifInBroadcastPkts,ifOutBroadcastPkts);
 		  exit_code=2;
 		}
 	      else
 		{
 		  if ( ifSpeed < warn)
 		    {
-		      printf("WARNING - link %s is up at %ld Mbit/s| inOctets=%lu outOctets=%lu\n",ifName,ifSpeed,ifInOctets,ifOutOctets);
+		      printf ("WARNING - link %s is up at %ld Mbit/s| inOctets=%lu outOctets=%lu inUcastPkts=%lu outUcastPkts=%lu inMulticastPkts=%lu outMulticastPkts=%lu inBroadcastPkts=%lu outBroadcastPkts=%lu\n",ifName,ifSpeed,ifInOctets,ifOutOctets,ifInUcastPkts,ifOutUcastPkts,ifInMulticastPkts,ifOutMulticastPkts,ifInBroadcastPkts,ifOutBroadcastPkts);		  
 		      exit_code=1;
 		    }
 		  else
 		    {
-		      printf ("OK - link %s is up at %ld Mbit/s|  inOctets=%lu outOctets=%lu\n",ifName,ifSpeed,ifInOctets,ifOutOctets);
+		      printf ("OK - link %s is up at %ld Mbit/s| inOctets=%lu outOctets=%lu inUcastPkts=%lu outUcastPkts=%lu inMulticastPkts=%lu outMulticastPkts=%lu inBroadcastPkts=%lu outBroadcastPkts=%lu\n",ifName,ifSpeed,ifInOctets,ifOutOctets,ifInUcastPkts,ifOutUcastPkts,ifInMulticastPkts,ifOutMulticastPkts,ifInBroadcastPkts,ifOutBroadcastPkts);		  
 		      exit_code=0;
 		    }
 		}
