@@ -108,7 +108,15 @@ int elib_get_one_response(
 	{
 	  if ((*responsep)->variables )
 	    {
-	      exit_code = 0;
+	      if ((*responsep)->variables->val_len)
+		{
+		  exit_code = 0;
+		}
+	      else
+		{
+		  printf("UNKNOWN - variable length is zero\n");
+		  exit_code = 3;
+		}
 	    }
 	  else
 	    {
