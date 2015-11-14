@@ -114,8 +114,8 @@ int elib_get_one_response(
 		}
 	      else
 		{
-		  printf("UNKNOWN - variable length is zero\n");
-		  exit_code = 3;
+		  /* printf("UNKNOWN - variable length is zero\n"); */
+		  exit_code = 2;
 		}
 	    }
 	  else
