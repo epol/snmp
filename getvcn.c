@@ -48,7 +48,7 @@ int main(int argc, char** argv)
       {
 	if (argv[i][0] != '-')
 	  {
-	    printf("UNKNOWN - unknown parameter %s",argv[i]);
+	    printf("UNKNOWN - unknown parameter %s\n",argv[i]);
 	    exit(3);
 	    }
 	switch (argv[i][1])
@@ -66,7 +66,7 @@ int main(int argc, char** argv)
       }
     if ( !agentaddress || !community || (member==-1) )
       {
-	printf("UNKNOWN - wrong parameters");
+	printf("UNKNOWN - wrong parameters\n");
 	exit(3);
       }
   }   
