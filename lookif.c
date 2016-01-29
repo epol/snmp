@@ -33,7 +33,7 @@
 uint64_t get_counter64(struct snmp_pdu* response)
 {
   struct counter64* num = (response->variables->val.counter64);
-  return num->high<<32 + num->low;
+  return ((uint64_t)((uint32_t)num->high) << 32) + ((uint32_t)num->low);
 }
 
 
