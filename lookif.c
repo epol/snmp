@@ -204,7 +204,7 @@ int main(int argc, char** argv)
 	      break;
 	    }
 
-	  get_node("IF-MIB::ifInOctets",anOID, &anOID_len);
+	  get_node("IF-MIB::ifHCInOctets",anOID, &anOID_len);
 	  anOID[anOID_len++] = ifIndex;
 	  
 	  status = elib_get_one_response(ss,&response, anOID, anOID_len, SNMP_MSG_GET  );
@@ -227,7 +227,7 @@ int main(int argc, char** argv)
 	      break;
 	    }
 
-	  get_node("IF-MIB::ifOutOctets",anOID, &anOID_len);
+	  get_node("IF-MIB::ifHCOutOctets",anOID, &anOID_len);
 	  anOID[anOID_len++] = ifIndex;
 	  
 	  status = elib_get_one_response(ss,&response, anOID, anOID_len, SNMP_MSG_GET  );
@@ -250,7 +250,7 @@ int main(int argc, char** argv)
 	      break;
 	    }
 
-	  get_node("IF-MIB::ifInUcastPkts",anOID, &anOID_len);
+	  get_node("IF-MIB::ifHCInUcastPkts",anOID, &anOID_len);
 	  anOID[anOID_len++] = ifIndex;
 	  
 	  status = elib_get_one_response(ss,&response, anOID, anOID_len, SNMP_MSG_GET  );
@@ -273,7 +273,7 @@ int main(int argc, char** argv)
 	      break;
 	    }
 
-	  get_node("IF-MIB::ifOutUcastPkts",anOID, &anOID_len);
+	  get_node("IF-MIB::ifHCOutUcastPkts",anOID, &anOID_len);
 	  anOID[anOID_len++] = ifIndex;
 	  
 	  status = elib_get_one_response(ss,&response, anOID, anOID_len, SNMP_MSG_GET  );
@@ -296,7 +296,7 @@ int main(int argc, char** argv)
 	      break;
 	    }
 
-	  get_node("IF-MIB::ifInMulticastPkts",anOID, &anOID_len);
+	  get_node("IF-MIB::ifHCInMulticastPkts",anOID, &anOID_len);
 	  anOID[anOID_len++] = ifIndex;
 	  
 	  status = elib_get_one_response(ss,&response, anOID, anOID_len, SNMP_MSG_GET  );
@@ -319,7 +319,7 @@ int main(int argc, char** argv)
 	      break;
 	    }
 
-	  get_node("IF-MIB::ifOutMulticastPkts",anOID, &anOID_len);
+	  get_node("IF-MIB::ifHCOutMulticastPkts",anOID, &anOID_len);
 	  anOID[anOID_len++] = ifIndex;
 	  
 	  status = elib_get_one_response(ss,&response, anOID, anOID_len, SNMP_MSG_GET  );
@@ -342,7 +342,7 @@ int main(int argc, char** argv)
 	      break;
 	    }
 	  
-	  get_node("IF-MIB::ifInBroadcastPkts",anOID, &anOID_len);
+	  get_node("IF-MIB::ifHCInBroadcastPkts",anOID, &anOID_len);
 	  anOID[anOID_len++] = ifIndex;
 	  
 	  status = elib_get_one_response(ss,&response, anOID, anOID_len, SNMP_MSG_GET  );
@@ -365,7 +365,7 @@ int main(int argc, char** argv)
 	      break;
 	    }
 
-	  get_node("IF-MIB::ifOutBroadcastPkts",anOID, &anOID_len);
+	  get_node("IF-MIB::ifHCOutBroadcastPkts",anOID, &anOID_len);
 	  anOID[anOID_len++] = ifIndex;
 	  
 	  status = elib_get_one_response(ss,&response, anOID, anOID_len, SNMP_MSG_GET  );
