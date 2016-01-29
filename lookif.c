@@ -23,11 +23,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdint.h>
 
 #include <net-snmp/net-snmp-config.h>
 #include <net-snmp/net-snmp-includes.h>
 
 #include "elib.h"
+
+uint64_t get_counter64(struct snmp_pdu* response)
+{
+  struct counter64* num = (response->variables->val.counter64);
+  return num->high<<32 + num->low;
+}
 
 
 int main(int argc, char** argv)
@@ -49,14 +56,14 @@ int main(int argc, char** argv)
   int ifIndex=1;
   long int ifStatus = 0;
   long int ifSpeed = 0;
-  unsigned long int ifInOctets = 0;
-  unsigned long int ifOutOctets = 0;
-  unsigned long int ifInUcastPkts = 0;
-  unsigned long int ifOutUcastPkts = 0;
-  unsigned long int ifInMulticastPkts = 0;
-  unsigned long int ifOutMulticastPkts = 0;
-  unsigned long int ifInBroadcastPkts = 0;
-  unsigned long int ifOutBroadcastPkts = 0;
+  uint64_t ifInOctets = 0;
+  uint64_t ifOutOctets = 0;
+  uint64_t ifInUcastPkts = 0;
+  uint64_t ifOutUcastPkts = 0;
+  uint64_t ifInMulticastPkts = 0;
+  uint64_t ifOutMulticastPkts = 0;
+  uint64_t ifInBroadcastPkts = 0;
+  uint64_t ifOutBroadcastPkts = 0;
   
   {
     int i = 1;
@@ -213,7 +220,7 @@ int main(int argc, char** argv)
 	    {
 	    case 0:
 	      /* OK with the query */
-	      ifInOctets = *(response->variables->val.integer);
+	      ifInOctets = get_counter64(response);
 	      exit_code=0;
 	      break;	
 	    case 2:
@@ -236,7 +243,7 @@ int main(int argc, char** argv)
 	    {
 	    case 0:
 	      /* OK with the query */
-	      ifOutOctets = *(response->variables->val.integer);
+	      ifOutOctets = get_counter64(response);
 	      exit_code=0;
 	      break;	
 	    case 2:
@@ -259,7 +266,7 @@ int main(int argc, char** argv)
 	    {
 	    case 0:
 	      /* OK with the query */
-	      ifInUcastPkts = *(response->variables->val.integer);
+	      ifInUcastPkts = get_counter64(response);
 	      exit_code=0;
 	      break;	
 	    case 2:
@@ -282,7 +289,7 @@ int main(int argc, char** argv)
 	    {
 	    case 0:
 	      /* OK with the query */
-	      ifOutUcastPkts = *(response->variables->val.integer);
+	      ifOutUcastPkts = get_counter64(response);
 	      exit_code=0;
 	      break;	
 	    case 2:
@@ -305,7 +312,7 @@ int main(int argc, char** argv)
 	    {
 	    case 0:
 	      /* OK with the query */
-	      ifInMulticastPkts = *(response->variables->val.integer);
+	      ifInMulticastPkts = get_counter64(response);
 	      exit_code=0;
 	      break;	
 	    case 2:
@@ -328,7 +335,7 @@ int main(int argc, char** argv)
 	    {
 	    case 0:
 	      /* OK with the query */
-	      ifOutMulticastPkts = *(response->variables->val.integer);
+	      ifOutMulticastPkts = get_counter64(response);
 	      exit_code=0;
 	      break;	
 	    case 2:
@@ -351,7 +358,7 @@ int main(int argc, char** argv)
 	    {
 	    case 0:
 	      /* OK with the query */
-	      ifInBroadcastPkts = *(response->variables->val.integer);
+	      ifInBroadcastPkts = get_counter64(response);
 	      exit_code=0;
 	      break;	
 	    case 2:
@@ -374,7 +381,7 @@ int main(int argc, char** argv)
 	    {
 	    case 0:
 	      /* OK with the query */
-	      ifOutBroadcastPkts = *(response->variables->val.integer);
+	      ifOutBroadcastPkts = get_counter64(response);
 	      exit_code=0;
 	      break;	
 	    case 2:
@@ -400,19 +407,19 @@ int main(int argc, char** argv)
 	    {
 	      if ( ifSpeed < crit)
 		{
-		  printf ("CRITICAL - link %s is up at %ld Mbit/s| inOctets=%lu outOctets=%lu inUcastPkts=%lu outUcastPkts=%lu inMulticastPkts=%lu outMulticastPkts=%lu inBroadcastPkts=%lu outBroadcastPkts=%lu\n",ifName,ifSpeed,ifInOctets,ifOutOctets,ifInUcastPkts,ifOutUcastPkts,ifInMulticastPkts,ifOutMulticastPkts,ifInBroadcastPkts,ifOutBroadcastPkts);
+		  printf ("CRITICAL - link %s is up at %ld Mbit/s| inOctets=%" PRIu64 " outOctets=%" PRIu64 " inUcastPkts=%" PRIu64 " outUcastPkts=%" PRIu64 " inMulticastPkts=%" PRIu64 " outMulticastPkts=%" PRIu64 " inBroadcastPkts=%" PRIu64 " outBroadcastPkts=%" PRIu64 "\n",ifName,ifSpeed,ifInOctets,ifOutOctets,ifInUcastPkts,ifOutUcastPkts,ifInMulticastPkts,ifOutMulticastPkts,ifInBroadcastPkts,ifOutBroadcastPkts);
 		  exit_code=2;
 		}
 	      else
 		{
 		  if ( ifSpeed < warn)
 		    {
-		      printf ("WARNING - link %s is up at %ld Mbit/s| inOctets=%lu outOctets=%lu inUcastPkts=%lu outUcastPkts=%lu inMulticastPkts=%lu outMulticastPkts=%lu inBroadcastPkts=%lu outBroadcastPkts=%lu\n",ifName,ifSpeed,ifInOctets,ifOutOctets,ifInUcastPkts,ifOutUcastPkts,ifInMulticastPkts,ifOutMulticastPkts,ifInBroadcastPkts,ifOutBroadcastPkts);		  
+		      printf ("WARNING - link %s is up at %ld Mbit/s| inOctets=%" PRIu64 " outOctets=%" PRIu64 " inUcastPkts=%" PRIu64 " outUcastPkts=%" PRIu64 " inMulticastPkts=%" PRIu64 " outMulticastPkts=%" PRIu64 " inBroadcastPkts=%" PRIu64 " outBroadcastPkts=%" PRIu64 "\n",ifName,ifSpeed,ifInOctets,ifOutOctets,ifInUcastPkts,ifOutUcastPkts,ifInMulticastPkts,ifOutMulticastPkts,ifInBroadcastPkts,ifOutBroadcastPkts);		  
 		      exit_code=1;
 		    }
 		  else
 		    {
-		      printf ("OK - link %s is up at %ld Mbit/s| inOctets=%lu outOctets=%lu inUcastPkts=%lu outUcastPkts=%lu inMulticastPkts=%lu outMulticastPkts=%lu inBroadcastPkts=%lu outBroadcastPkts=%lu\n",ifName,ifSpeed,ifInOctets,ifOutOctets,ifInUcastPkts,ifOutUcastPkts,ifInMulticastPkts,ifOutMulticastPkts,ifInBroadcastPkts,ifOutBroadcastPkts);		  
+		      printf ("OK - link %s is up at %ld Mbit/s| inOctets=%" PRIu64 " outOctets=%" PRIu64 " inUcastPkts=%" PRIu64 " outUcastPkts=%" PRIu64 " inMulticastPkts=%" PRIu64 " outMulticastPkts=%" PRIu64 " inBroadcastPkts=%" PRIu64 " outBroadcastPkts=%" PRIu64 "\n",ifName,ifSpeed,ifInOctets,ifOutOctets,ifInUcastPkts,ifOutUcastPkts,ifInMulticastPkts,ifOutMulticastPkts,ifInBroadcastPkts,ifOutBroadcastPkts);		  
 		      exit_code=0;
 		    }
 		}
