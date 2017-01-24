@@ -150,6 +150,8 @@ new_ids = set()
 updated = 0
 added = 0
 deleted = 0
+dep_deleted = 0
+dep_created = 0
 
 for AP in APs_desc:
     index = int(AP.oid.split('.')[-1])
@@ -191,6 +193,42 @@ for AP in APs_desc:
         r.raise_for_status()
         added += 1
 
+    # manage dependcy
+    r = icinga_session.post(icinga_url+'objects/dependencies',
+                            headers={'X-HTTP-Method-Override':'GET'},
+                            data=json.dumps({'attrs': ['child_host_name','parent_host_name','name'],
+                                             'filter': 'dependency.child_host_name=="'+conv[id]+'" && "AP-switch" in dependency.templates'}))
+    r.raise_for_status()
+    create = False
+    if len(r.json()['results']) > 0:
+        if len(r.json()['results'])>1:
+            print("Warning: something wrong with "+conv[id]+" dependencies")
+        dep = r.json()['results'][0]
+        if dep['attrs']['parent_host_name'] != floor:
+            r2 = icinga_session.delete(icinga_url+'objects/dependencies/'+dep['name'],
+                              #params = {'cascade':1},
+                              headers={'Accept': 'application/json'})
+            r2.raise_for_status()
+            dep_deleted +=1
+            create = True
+    else:
+        create = True
+    if create:
+        r = icinga_session.post(icinga_url+'objects/hosts',
+                                headers={'X-HTTP-Method-Override':'GET'},
+                                data=json.dumps({'attrs': ['name'],
+                                                 'filter': 'host.name=="'+floor+'" && "switch" in host.groups'}))
+        r.raise_for_status()
+        if len(r.json()['results'])>0:
+            # the host exist, let's create the dependency
+            r = icinga_session.put(icinga_url+'objects/dependencies/'+conv[id]+'!'+floor,
+                                   headers={'Accept':'application/json'},
+                                   data = json.dumps({'templates':['AP-switch'],
+                                                      'attrs':{'parent_host_name':floor,
+                                                               'child_host_name':conv[id]}}))
+            r.raise_for_status()
+            dep_created +=1
+
 # deleted_ids: the IDs of the APs that no longer are in the controller
 deleted_ids = old_ids - new_ids
 for id in deleted_ids:
@@ -201,6 +239,7 @@ for id in deleted_ids:
     deleted += 1
 
 print ("Finish. Added: {added}, updated: {updated}, deleted: {deleted}".format(added=str(added),updated=str(updated),deleted=str(deleted)))
+print ("Created {dep_created} dependencies and delted {dep_deleted} dependencies".format(dep_created=int(dep_created),dep_deleted=int(dep_deleted)))
 
             
 
