@@ -32,6 +32,10 @@ parser.add_argument("-C", "--community", help="SNMP community",required=True)
 parser.add_argument("-i", "--interface", help="interface name",required=True)
 parser.add_argument("-w", "--warning", type=int, help="Warning limit for the interface speed",default=0)
 parser.add_argument("-c", "--critical", type=int, help="Critical limit for the interface speed",default=0)
+parser.add_argument("-n", "--index", type=int, help="SNMP index of the interface to query",required=False)
+parser.add_argument("-iH","--icingahost", help="Hostname of the icinga host", required=False)
+parser.add_argument("-iu","--icingausername", help="Username for the icinga API", required=False)
+parser.add_argument("-ip","--icingapassword", help="Password for the icinga API", required=False)
 
 args = parser.parse_args()
 
@@ -40,29 +44,55 @@ hostname = args.hostname
 community = args.community
 warningSpeed = args.warning
 criticalSpeed = args.critical
+ifIndex = args.index
 
-s = easysnmp.Session(hostname=hostname,community=community, version=2)
+
 try:
-    ifNames = s.walk('ifName')
+    s = easysnmp.Session(hostname=hostname,community=community, version=2)
 except:
-    print("UNKNOWN - unable to enumerate interfaces, is the host reachable and the community correct?")
+    print ("UNKNOWN - unable to establish SNMP connection to the host")
     sys.exit(3)
 
-ifIndexes = [ entry.oid_index  for entry in ifNames if entry.value==ifName ]
 
-if (len(ifIndexes)==0):
-    print ("UNKNOWN - unable to find interface {ifName}".format(ifName=ifName))
-    sys.exit(3)
-elif (len(ifIndexes)>1):
-    print ("UNKNOWN - more than one interface named {ifName}".format(ifName=ifName))
-    sys.exit(3)
-else:
-    ifIndex = ifIndexes[0]
-
+if (ifIndex is None) or (s.get(('ifName',ifIndex)).value != ifName):
+    try:
+        ifNames = s.walk('ifName')
+    except:
+        print ("UNKNOWN - unable to enumerate interface names")
+        sys.exit(3)
+    
+    ifIndexes = [ entry.oid_index  for entry in ifNames if entry.value==ifName ]
+    if (len(ifIndexes)==0):
+        print ("UNKNOWN - unable to find interface {ifName}".format(ifName=ifName))
+        sys.exit(3)
+    elif (len(ifIndexes)>1):
+        print ("UNKNOWN - more than one interface named {ifName}".format(ifName=ifName))
+        sys.exit(3)
+    else:
+        ifIndex = ifIndexes[0]
+    if (args.icingahost != None) and (args.icingausername != None) and (args.icingapassword != None):
+        import requests
+        import json
+        try:
+            request_result = requests.post('https://'+args.icingahost+':5665/v1/objects/services/',
+                                           verify=False,
+                                           auth=(args.icingausername,args.icingapassword),
+                                           data=json.dumps(
+                                               {'attrs': {'vars.interface_index':str(ifIndex)},
+                                                'filter':'service.vars.interface=="{ifName}" && host.address=="{hostname}"'.format(ifName=ifName,hostname=hostname)}),
+                                           headers={'accept':'application/json'}
+            )
+            request_result.raise_for_status()
+        except:
+            print ("UNKNOWN - error in updating icinga infos")
+            sys.exit(3)
+        
+        
 try:
     ifOperStatus = s.get(('ifOperStatus',ifIndex)).value
 except:
     print ("UNKNOWN - unable to get interface {ifName} status".format(ifName=ifName))
+    sys.exit(3)
 
 if ifOperStatus == '1':
     pass
@@ -81,14 +111,11 @@ try:
 except:
     print ("UNKNOWN - unable to get interface {ifName} IN octects".format(ifName=ifName))
     sys.exit(3)
-
 try:
     ifHCOutOctets = s.get(('ifHCOutOctets',ifIndex)).value
 except:
     print ("UNKNOWN - unable to get interface {ifName} OUT octects".format(ifName=ifName))
     sys.exit(3)
-
-
 try:
     ifHighSpeed = int(s.get(('ifHighSpeed',ifIndex)).value)
 except:
