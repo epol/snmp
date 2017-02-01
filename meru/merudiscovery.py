@@ -147,9 +147,7 @@ conv = { int(h['attrs']['vars']['id']) : str(h['name'])  for h in old_APS }
 # new_ids: the IDs of the AP found in the search
 new_ids = set()
 
-updated = 0
-added = 0
-deleted = 0
+counters_host = {'updated':0,'added':0,'deleted':0,'not_changed':0}
 dep_deleted = 0
 dep_created = 0
 
@@ -180,10 +178,27 @@ for AP in APs_desc:
     if id in old_ids:
         # object already present, updating info...
         r = icinga_session.post(icinga_url+'objects/hosts/'+conv[id],
-                               data=json.dumps(icinga_host),
-                               headers={'Accept':'application/json'})
+                                headers={'X-HTTP-METHOD-OVERRIDE':'GET'},
+                                data=json.dumps({'attrs':['display_name','vars']}))
         r.raise_for_status()
-        updated += 1
+        old_object_raw = r.json()['results'][0]['attrs']
+        old_object = {'display_name':old_object_raw['display_name']}
+        for name in ['id','index','contact','location','floor','building','serial','hwtype']:
+            old_object['vars.'+name]=old_object_raw['vars'][name]
+
+        to_update = False
+        for name in ['display_name', 'vars.id', 'vars.index', 'vars.contact', 'vars.location', 'vars.floor', 'vars.building', 'vars.serial', 'vars.hwtype']:
+            if old_object[name] != icinga_host['attrs'][name]:
+                to_update = True
+
+        if to_update:
+            r = icinga_session.post(icinga_url+'objects/hosts/'+conv[id],
+                                    data=json.dumps(icinga_host),
+                                    headers={'Accept':'application/json'})
+            r.raise_for_status()
+            counters_host['updated'] += 1
+        else:
+            counters_host['not_changed'] += 1
     else:
         # new object
         conv[id]='AP-'+str(id)
@@ -191,7 +206,7 @@ for AP in APs_desc:
                                data=json.dumps(icinga_host),
                                headers={'Accept':'application/json'})
         r.raise_for_status()
-        added += 1
+        counters_host['added'] += 1
 
     # manage dependcy
     r = icinga_session.post(icinga_url+'objects/dependencies',
@@ -236,10 +251,10 @@ for id in deleted_ids:
                               params = {'cascade':1},
                               headers={'Accept': 'application/json'})
     r.raise_for_status()
-    deleted += 1
+    counters_host['deleted'] += 1
 
-print ("Finish. Added: {added}, updated: {updated}, deleted: {deleted}".format(added=str(added),updated=str(updated),deleted=str(deleted)))
-print ("Created {dep_created} dependencies and delted {dep_deleted} dependencies".format(dep_created=int(dep_created),dep_deleted=int(dep_deleted)))
+print ("Finish. Added: {added}, updated: {updated}, deleted: {deleted}, not changed: {not_changed}".format(added=str(counters_host['added']),updated=str(counters_host['updated']),deleted=str(counters_host['deleted']),not_changed=str(counters_host['not_changed'])))
+print ("Created {dep_created} dependencies and deletd {dep_deleted} dependencies".format(dep_created=int(dep_created),dep_deleted=int(dep_deleted)))
 
             
 
