@@ -27,6 +27,8 @@ import argparse
 import sys
 import json
 import requests
+import re
+
 
 def APHW_tostring(hwint):
     if hwint == 0:
@@ -107,6 +109,8 @@ def APHW_tostring(hwint):
         return "Code not found in meru MIB"
 
 
+vcmember_regex = re.compile(r'[gf]e-(\d)/\d/\d{1,2}', re.IGNORECASE)
+    
 parser = argparse.ArgumentParser()
 parser.add_argument("-m", "--meruhost", help="Hostname of the meru controller",required=True)
 parser.add_argument("-C","-c", "--community", help="SNMP community of the meru controller",required=True)
@@ -148,8 +152,7 @@ conv = { int(h['attrs']['vars']['id']) : str(h['name'])  for h in old_APS }
 new_ids = set()
 
 counters_host = {'updated':0,'added':0,'deleted':0,'not_changed':0}
-dep_deleted = 0
-dep_created = 0
+counter_dependency = {'deleted': 0, 'created': 0}
 
 for AP in APs_desc:
     index = int(AP.oid.split('.')[-1])
@@ -208,7 +211,8 @@ for AP in APs_desc:
         r.raise_for_status()
         counters_host['added'] += 1
 
-    # manage dependcy
+    # manage dependcies
+    ## switch dependency
     r = icinga_session.post(icinga_url+'objects/dependencies',
                             headers={'X-HTTP-Method-Override':'GET'},
                             data=json.dumps({'attrs': ['child_host_name','parent_host_name','name'],
@@ -224,7 +228,7 @@ for AP in APs_desc:
                               #params = {'cascade':1},
                               headers={'Accept': 'application/json'})
             r2.raise_for_status()
-            dep_deleted +=1
+            counter_dependency['deleted'] +=1
             create = True
     else:
         create = True
@@ -242,7 +246,49 @@ for AP in APs_desc:
                                                       'attrs':{'parent_host_name':floor,
                                                                'child_host_name':conv[id]}}))
             r.raise_for_status()
-            dep_created +=1
+            counter_dependency['created'] +=1
+
+    ## virtual chassis member dependency
+    vcmember_search = vcmember_regex.search(contact)
+    if vcmember_search != None:
+        vcmember = vcmember_search.group(1)
+    else:
+        vcmember = None
+    r = icinga_session.post(icinga_url+'objects/dependencies',
+                            headers={'X-HTTP-Method-Override':'GET'},
+                            data=json.dumps({'attrs': ['child_host_name','parent_host_name','parent_service_name','name'],
+                                             'filter': 'dependency.child_host_name=="'+conv[id]+'" && "AP-vcmember" in dependency.templates'}))
+    r.raise_for_status()
+    create = False
+    if len(r.json()['results']) > 0:
+        if len(r.json()['results'])>1:
+            print("Warning: something wrong with "+conv[id]+" dependencies")
+        dep = r.json()['results'][0]
+        if (vcmember == None) or (dep['attrs']['parent_host_name'] != floor) or (dep['attrs']['parent_service_name'] != 'member'+vcmember):
+            r2 = icinga_session.delete(icinga_url+'objects/dependencies/'+dep['name'],
+                              #params = {'cascade':1},
+                              headers={'Accept': 'application/json'})
+            r2.raise_for_status()
+            counter_dependency['deleted'] +=1
+            create = True
+    else:
+        create = True
+    if (vcmember != None) and (create):
+        r = icinga_session.post(icinga_url+'objects/services',
+                                headers={'X-HTTP-Method-Override':'GET'},
+                                data=json.dumps({'attrs': ['name'],
+                                                 'filter': 'host.name=="'+floor+'" && service.name=="member'+vcmember+'" && "switch" in host.groups'}))
+        r.raise_for_status()
+        if len(r.json()['results'])>0:
+            # the host exist, let's create the dependency
+            r = icinga_session.put(icinga_url+'objects/dependencies/'+conv[id]+'!'+floor+'-member'+vcmember,
+                                   headers={'Accept':'application/json'},
+                                   data = json.dumps({'templates':['AP-vcmember'],
+                                                      'attrs':{'parent_host_name':floor,
+                                                               'parent_service_name':'member'+vcmember,
+                                                               'child_host_name':conv[id]}}))
+            r.raise_for_status()
+            counter_dependency['created'] +=1
 
 # deleted_ids: the IDs of the APs that no longer are in the controller
 deleted_ids = old_ids - new_ids
@@ -254,7 +300,7 @@ for id in deleted_ids:
     counters_host['deleted'] += 1
 
 print ("Finish. Added: {added}, updated: {updated}, deleted: {deleted}, not changed: {not_changed}".format(added=str(counters_host['added']),updated=str(counters_host['updated']),deleted=str(counters_host['deleted']),not_changed=str(counters_host['not_changed'])))
-print ("Created {dep_created} dependencies and deletd {dep_deleted} dependencies".format(dep_created=int(dep_created),dep_deleted=int(dep_deleted)))
+print ("Created {dep_created} dependencies and deletd {dep_deleted} dependencies".format(dep_created=int(counter_dependency['created']),dep_deleted=int(counter_dependency['deleted'])))
 
             
 
