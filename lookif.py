@@ -107,21 +107,20 @@ else:
     sys.exit(3)
 
 try:
-    ifHCInOctets = s.get(('ifHCInOctets',ifIndex)).value
-except:
-    print ("UNKNOWN - unable to get interface {ifName} IN octects".format(ifName=ifName))
-    sys.exit(3)
-try:
-    ifHCOutOctets = s.get(('ifHCOutOctets',ifIndex)).value
-except:
-    print ("UNKNOWN - unable to get interface {ifName} OUT octects".format(ifName=ifName))
-    sys.exit(3)
-try:
     ifHighSpeed = int(s.get(('ifHighSpeed',ifIndex)).value)
 except:
     print ("UNKNOWN - unable to get interface {ifName} speed".format(ifName=ifName))
     sys.exit(3)
-
+    
+statisticalData = {}
+first_low = lambda s: s[:1].lower() + s[1:] if s else ''
+for name in ["ifHCInOctets", "ifHCOutOctets", "ifHCInUcastPkts", "ifHCOutUcastPkts","ifHCInMulticastPkts","ifHCOutMulticastPkts","ifHCInBroadcastPkts","ifHCOutBroadcastPkts"]:
+    try:
+        statisticalData[first_low(name.lstrip('ifHC'))] = s.get((name,ifIndex)).value
+    except:
+        print ("UNKNOWN - unable to get interface {ifName} {variable}".format(ifName=ifName,variable=name))
+        sys.exit(3)
+statisticalData['speed'] = ifHighSpeed*1000*1000
 
 if ifHighSpeed < criticalSpeed:
     returnState = "CRITICAL"
@@ -133,6 +132,8 @@ else:
     returnState = "OK"
     exitCode = 0
 
-print ("{returnState} - link {ifName} is up at {ifHighSpeed} Mbit/s| inOctets={ifHCInOctets} outOctets={ifHCOutOctets}".format(returnState=returnState, ifName=ifName,ifHighSpeed=ifHighSpeed,ifHCInOctets = ifHCInOctets,ifHCOutOctets = ifHCOutOctets))
+statisticalDataString = ' '.join([ "{name}={value}".format(name=name,value=statisticalData[name]) for name in statisticalData.keys()])
+    
+print ("{returnState} - link {ifName} is up at {ifHighSpeed} Mbit/s| {statisticalData}".format(returnState=returnState, ifName=ifName,ifHighSpeed=ifHighSpeed,statisticalData=statisticalDataString))
 sys.exit(exitCode)
 
