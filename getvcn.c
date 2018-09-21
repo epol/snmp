@@ -112,6 +112,10 @@ int main(int argc, char** argv)
 	case 3:
 	  printf("OK - linecard\n");
 	  break;
+	case 4:
+	  printf("CRITICAL - inactive\n");
+	  exit_code = 2;
+	  break;
 	default:
 	  printf("UNKNOWN - unknow jnxVirtualChassisMemberRole integer %ld for member %d\n", *(response->variables->val.integer), member);
 	  exit_code = 3;
